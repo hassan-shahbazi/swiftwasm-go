@@ -1,3 +1,5 @@
+import c_header
+
 print("Hello, world!")
 
 @_cdecl("hello")
@@ -26,4 +28,9 @@ func concatenateFromHost(s1: UnsafePointer<CChar>, s2: UnsafePointer<CChar>) -> 
   let result = str1 + " " + str2
 
   return UnsafeMutablePointer<CChar>(mutating: result)
+}
+
+@_cdecl("fetch")
+func fetchCodefromHost(input: Int32) -> Int32 {
+  return c_fetchCode(input);
 }

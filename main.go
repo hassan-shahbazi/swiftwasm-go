@@ -1,8 +1,13 @@
 package main
 
+// #include <stdlib.h>
+//
+// extern int fetchCode(void *, int);
+import "C"
 import (
 	"fmt"
 	"strings"
+	"unsafe"
 
 	"github.com/wasmerio/go-ext-wasm/wasmer"
 )
@@ -28,16 +33,30 @@ func main() {
 	}
 	importObject := wasmer.NewDefaultWasiImportObjectForVersion(wasiVersion)
 
+	// Make new C imports
+	imports := wasmer.NewImports()
+	imports, err = imports.AppendFunction("fetch_code", fetchCode, C.fetchCode)
+	if err != nil {
+		panic(err)
+	}
+
+	// Extend the import objects with C imports
+	importObject.Extend(*imports)
+
 	// Instantiates the WebAssembly module using derived import objects.
 	instance, err := module.InstantiateWithImportObject(importObject)
 	if err != nil {
 		panic(err)
 	}
 	defer importObject.Close()
+	defer imports.Close()
 	defer instance.Close()
 
-	sum(&instance)
-	concatenate(&instance, "Hello", "World!")
+	// sum(&instance)
+	// concatenate(&instance, "Hello", "World!")
+
+	fmt.Println(fetchCodeOnBinary(&instance, 2))
+	fmt.Println(fetchCodeOnBinary(&instance, 5))
 }
 
 func sum(instance *wasmer.Instance) {
@@ -133,4 +152,22 @@ func convertToString(instance *wasmer.Instance, output wasmer.Value) (string, in
 		counter++
 	}
 	return builder.String(), int32(counter)
+}
+
+func fetchCodeOnBinary(instance *wasmer.Instance, input int32) int32 {
+	// Gets start function from the WebAssembly instance.
+	fetch := instance.Exports["fetch"]
+
+	// Calls that exported function with Go standard values. The WebAssembly types are inferred and values are casted automatically.
+	result, err := fetch(input)
+	if err != nil {
+		panic(err)
+	}
+
+	return result.ToI32()
+}
+
+//export fetchCode
+func fetchCode(context unsafe.Pointer, input C.int) C.int {
+	return input * 2
 }

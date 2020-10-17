@@ -6,8 +6,7 @@ import PackageDescription
 let package = Package(
     name: "swiftwasm",
     targets: [
-        .target(
-            name: "swiftwasm",
-            dependencies: []),
+      .target(name: "c_header", dependencies: []),
+      .target(name: "swiftwasm", dependencies: ["c_header"]),
     ]
 )
