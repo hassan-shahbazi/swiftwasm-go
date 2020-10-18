@@ -52,14 +52,27 @@ func main() {
 	defer imports.Close()
 	defer instance.Close()
 
-	// sum(&instance)
-	// concatenate(&instance, "Hello", "World!")
-
-	fmt.Println(fetchCodeOnBinary(&instance, 2))
-	fmt.Println(fetchCodeOnBinary(&instance, 5))
+	fmt.Println("'_start' called, but returned void:", start(&instance).GetType() == wasmer.TypeVoid)
+	fmt.Println("'save' exported function:", sum(&instance))
+	fmt.Println("'concatenate' exported function with string parameters:", concatenate(&instance, "Hello", "World!"))
+	fmt.Println("'fetch_code imported function input: 2'", fetchCodeOnBinary(&instance, 2))
 }
 
-func sum(instance *wasmer.Instance) {
+func start(instance *wasmer.Instance) wasmer.Value {
+	// Gets start function from the WebAssembly instance.
+	start := instance.Exports["_start"]
+
+	// Calls that exported function with Go standard values. The WebAssembly types are inferred and values are casted automatically.
+	result, err := start()
+	if err != nil {
+		panic(err)
+	}
+
+	// To ensure the start function doesn't return any values
+	return result
+}
+
+func sum(instance *wasmer.Instance) int32 {
 	// Gets sum function from the WebAssembly instance.
 	sum := instance.Exports["sum"]
 
@@ -68,12 +81,10 @@ func sum(instance *wasmer.Instance) {
 	if err != nil {
 		panic(err)
 	}
-
-	// To ensure the hello function doesn't return any values
-	fmt.Println(result.ToI32())
+	return result.ToI32()
 }
 
-func concatenate(instance *wasmer.Instance, s1, s2 string) {
+func concatenate(instance *wasmer.Instance, s1, s2 string) string {
 	// Allocate memory function
 	allocate := instance.Exports["allocate"]
 
@@ -118,7 +129,6 @@ func concatenate(instance *wasmer.Instance, s1, s2 string) {
 
 	// The result is another memory pointer contains the concated strings
 	output, size := convertToString(instance, result)
-	fmt.Println(output)
 
 	// deallocate memory
 	deallocate := instance.Exports["deallocate"]
@@ -140,6 +150,8 @@ func concatenate(instance *wasmer.Instance, s1, s2 string) {
 	if err != nil {
 		panic(err)
 	}
+
+	return output
 }
 
 func convertToString(instance *wasmer.Instance, output wasmer.Value) (string, int32) {

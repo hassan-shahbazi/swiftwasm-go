@@ -1,11 +1,6 @@
 import c_header
 
-print("Hello, world!")
-
-@_cdecl("hello")
-func helloFromHost() {
-  print("The function is called from a host application")
-}
+print("Hello World!")
 
 @_cdecl("sum")
 func sumFromHost(x: Int32, y: Int32) -> Int32 {
