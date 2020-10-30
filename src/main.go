@@ -12,9 +12,27 @@ import (
 	"github.com/wasmerio/go-ext-wasm/wasmer"
 )
 
+const (
+	swiftBinaryPath		= "../swiftwasm/binary.wasm"
+	rustBinaryPath		= "../rust/binary.wasm"
+)
+
 func main() {
+	importObject, imports, instance := instantiate(swiftBinaryPath)
+
+	defer importObject.Close()
+	defer imports.Close()
+	defer instance.Close()
+
+	fmt.Println("'_start' called, but returned void:", start(&instance).GetType() == wasmer.TypeVoid)
+	fmt.Println("'save' exported function:", sum(&instance))
+	fmt.Println("'concatenate' exported function with string parameters:", concatenate(&instance, "Hello", "World!"))
+	fmt.Println("'fetch_code imported function input: 2'", fetchCodeOnBinary(&instance, 2))
+}
+
+func instantiate(path string) (*wasmer.ImportObject, *wasmer.Imports, wasmer.Instance) {
 	// Reads the WebAssembly module as bytes.
-	bytes, err := wasmer.ReadBytes("binary.wasm")
+	bytes, err := wasmer.ReadBytes(path)
 	if err != nil {
 		panic(err)
 	}
@@ -48,14 +66,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer importObject.Close()
-	defer imports.Close()
-	defer instance.Close()
-
-	fmt.Println("'_start' called, but returned void:", start(&instance).GetType() == wasmer.TypeVoid)
-	fmt.Println("'save' exported function:", sum(&instance))
-	fmt.Println("'concatenate' exported function with string parameters:", concatenate(&instance, "Hello", "World!"))
-	fmt.Println("'fetch_code imported function input: 2'", fetchCodeOnBinary(&instance, 2))
+	return importObject, imports, instance
 }
 
 func start(instance *wasmer.Instance) wasmer.Value {
