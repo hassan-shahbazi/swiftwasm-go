@@ -1,21 +1,25 @@
 package main
 
 import (
-	"github.com/wasmerio/go-ext-wasm/wasmer"
 	"testing"
+
+	"github.com/wasmerio/go-ext-wasm/wasmer"
 )
 
-func TestStartBinary_Swift(t *testing.T) {
-	_,_, instance := instantiate(swiftBinaryPath)
+var instance wasmer.Instance
 
+func TestMain(m *testing.M) {
+	_, _, instance = instantiate(swiftBinaryPath)
+	m.Run()
+}
+
+func TestStartBinary_Swift(t *testing.T) {
 	if start(&instance).GetType() != wasmer.TypeVoid {
 		t.Error("error in starting the project")
 	}
 }
 
 func TestExportedFunction_Swift(t *testing.T) {
-	_,_, instance := instantiate(swiftBinaryPath)
-
 	result := sum(&instance)
 	if result != 3 {
 		t.Error("expected value is: 3, but got:", result)
@@ -23,8 +27,6 @@ func TestExportedFunction_Swift(t *testing.T) {
 }
 
 func TestImportedFunction_Swift(t *testing.T) {
-	_,_, instance := instantiate(swiftBinaryPath)
-
 	result := fetchCodeOnBinary(&instance, 2)
 	if result != 4 {
 		t.Error("expected value is: 4, but got:", result)
@@ -32,16 +34,12 @@ func TestImportedFunction_Swift(t *testing.T) {
 }
 
 func TestStartBinary_Rust(t *testing.T) {
-	_,_, instance := instantiate(rustBinaryPath)
-
 	if start(&instance).GetType() != wasmer.TypeVoid {
 		t.Error("error in starting the project")
 	}
 }
 
 func TestExportedFunction_Rust(t *testing.T) {
-	_,_, instance := instantiate(rustBinaryPath)
-
 	result := sum(&instance)
 	if result != 3 {
 		t.Error("expected value is: 3, but got:", result)
@@ -49,8 +47,6 @@ func TestExportedFunction_Rust(t *testing.T) {
 }
 
 func TestImportedFunction_Rust(t *testing.T) {
-	_,_, instance := instantiate(rustBinaryPath)
-
 	result := fetchCodeOnBinary(&instance, 2)
 	if result != 4 {
 		t.Error("expected value is: 4, but got:", result)
