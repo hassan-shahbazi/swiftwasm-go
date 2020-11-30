@@ -37,7 +37,12 @@ This repository contains all code related to a 3-part tutorial published on Medi
    $ cp swiftwasm/.build/release/swiftwasm.wasm ../binary.wasm
    ```
 
-4. Run the Go application
+4. (optionally) Run tests
+  ```bash
+  $ binary=swift go test ./... -v -race -count 1 -run _Swift
+  ```
+
+5. Run the Go application
    ```bash
    $ go run ./
    > Hello World!
@@ -47,26 +52,11 @@ This repository contains all code related to a 3-part tutorial published on Medi
    > 'fetch_code imported function input: 2' 4
    ```
 
-5. Run tests
-  ```bash
-  $ binary=swift go test ./... -v -race -count 1 -run _Swift
-
-  > === RUN   TestStartBinary_Swift
-  > Hello World!
-  > --- PASS: TestStartBinary_Swift (0.00s)
-  > === RUN   TestExportedFunction_Swift
-  > --- PASS: TestExportedFunction_Swift (0.00s)
-  > === RUN   TestImportedFunction_Swift
-  > --- PASS: TestImportedFunction_Swift (0.00s)
-  > PASS
-  > ok  	github.com/hassan-shahbazi/swiftwasi/src	6.416s
-  ```
-
 ## Benchmark
-With the first version of swiftwasm _(wasm-5.3.1-RELEASE)_, a swift generated binary offers a larger binary with a significantly poor performance comparing to Rust.
+With the first stable version of swiftwasm _(wasm-5.3.1-RELEASE)_, a swift generated binary offers a larger binary with a significantly poor performance comparing to Rust. The project contains a _Rust_ sample project for comparison purposes.
 
 ### Size
-The following comparison shows the binary size for a same set of functions in Rust and Swift, 1.7M and 9.8M respectively. The Swift binary is about 5 times larger than the Rust one.
+The following comparison shows the binary size for a same set of functions in Rust and Swift, **1.7M and 9.8M** respectively. The Swift binary is about 5 times larger than the Rust one.
 
 ```bash
 $ ls -lh rust | grep wasm
@@ -77,7 +67,7 @@ $ ls -lh swiftwasm | grep wasm
 ```
 
 ### Performance
-Larger binary size is not the only issue with Swift generated binaries. The more important issue is where _wasmer_ is almost 32 times slower in running Swift binaries comparing to Rust binaries with identical functions.
+Larger binary size is not the only issue with Swift generated binaries. The more important issue is where _wasmer_ is almost 32 times slower in running Swift binaries comparing to Rust binaries with identical functions. **With the execution times are same for both Rust and Swift, the main issue with Swift binary seems to be _wasmer_ compilation issue for large binaries.**
 
 ```bash
 $ binary=rust go test ./... -race -count 1 -run _Rust
@@ -88,7 +78,7 @@ ok  	github.com/hassan-shahbazi/swiftwasi/src	6.899s
 ```
 
 #### Optimization
-Discussed in [#2135](https://github.com/swiftwasm/swift/issues/2135), using [`wasm-opt -0s`](https://github.com/webassembly/binaryen) can significantly improve Swift binary size **from 9.8M to 4.4M** as well as the performance **from 6.899s to 3.547s**.
+Discussed in [#2135](https://github.com/swiftwasm/swift/issues/2135), using [`wasm-opt -0s`](https://github.com/webassembly/binaryen#wasm-opt) can significantly improve binary size **from 9.8M to 4.4M** which results in a the performance improvement **from 6.899s to 3.547s**.
 
 ```bash
 $ ~/binaryen/bin/wasm-opt swiftwasm/binary.wasm -o swiftwasm/binary.wasm -Os
